@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
-  // Removido experimental.serverActions pois agora é padrão
+  reactStrictMode: true,
+  swcMinify: true,
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -11,6 +11,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-};
+}
 
-export default nextConfig;
+module.exports = nextConfig
