@@ -8,8 +8,14 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Controle de Gastos",
+  title: "FluxoCerto",
   description: "Aplicativo para controle de gastos pessoais",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.png", type: "image/svg+xml" },
+    ],
+  },
 }
 
 export default function RootLayout({
