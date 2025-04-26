@@ -38,7 +38,7 @@ export function ExpenseList() {
   const { toast } = useToast()
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState("")
-  const [categoryFilter, setCategoryFilter] = useState("")
+  const [categoryFilter, setCategoryFilter] = useState("all")
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [expenseToDelete, setExpenseToDelete] = useState<string | null>(null)
   const [expenses, setExpenses] = useState<any[]>([])
@@ -48,8 +48,9 @@ export function ExpenseList() {
     const fetchExpenses = async () => {
       try {
         const data = await getExpenses()
-        setExpenses(data)
+        setExpenses(data || [])
       } catch (error) {
+        console.error("Erro ao buscar gastos:", error)
         toast({
           title: "Erro",
           description: "Não foi possível carregar os gastos. Tente novamente.",
@@ -101,6 +102,16 @@ export function ExpenseList() {
 
   if (isLoading) {
     return <div className="text-center py-4">Carregando...</div>
+  }
+
+  if (expenses.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum gasto registrado</h3>
+        <p className="text-gray-500 mb-4">Adicione seu primeiro gasto para começar a controlar suas despesas.</p>
+        <Button onClick={() => router.push("/")}>Adicionar Gasto</Button>
+      </div>
+    )
   }
 
   return (
