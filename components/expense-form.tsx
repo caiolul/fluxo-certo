@@ -55,21 +55,26 @@ export function ExpenseForm() {
   async function onSubmit(data: ExpenseFormValues) {
     setIsSubmitting(true)
     try {
-      await addExpense({
+      const result = await addExpense({
         description: data.description,
         amount: data.amount,
         category: data.category,
         date: data.date,
       })
 
-      toast({
-        title: "Gasto adicionado",
-        description: "Seu gasto foi registrado com sucesso!",
-      })
+      if (result) {
+        toast({
+          title: "Gasto adicionado",
+          description: "Seu gasto foi registrado com sucesso!",
+        })
 
-      form.reset()
-      router.refresh()
+        form.reset()
+        router.refresh()
+      } else {
+        throw new Error("Falha ao adicionar gasto")
+      }
     } catch (error) {
+      console.error("Erro ao adicionar gasto:", error)
       toast({
         title: "Erro",
         description: "Ocorreu um erro ao adicionar o gasto. Tente novamente.",
@@ -84,7 +89,12 @@ export function ExpenseForm() {
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
       <div className="space-y-2">
         <Label htmlFor="description">Descrição</Label>
-        <Input id="description" placeholder="Ex: Supermercado, Restaurante, etc." {...form.register("description")} />
+        <Input 
+          id="description" 
+          placeholder="Ex: Supermercado, Restaurante, etc." 
+          {...form.register("description")} 
+          disabled={isSubmitting}
+        />
         {form.formState.errors.description && (
           <p className="text-sm text-red-500">{form.formState.errors.description.message}</p>
         )}
@@ -92,13 +102,25 @@ export function ExpenseForm() {
 
       <div className="space-y-2">
         <Label htmlFor="amount">Valor (R$)</Label>
-        <Input id="amount" type="number" step="0.01" placeholder="0.00" {...form.register("amount")} />
-        {form.formState.errors.amount && <p className="text-sm text-red-500">{form.formState.errors.amount.message}</p>}
+        <Input 
+          id="amount" 
+          type="number" 
+          step="0.01" 
+          placeholder="0.00" 
+          {...form.register("amount")} 
+          disabled={isSubmitting}
+        />
+        {form.formState.errors.amount && (
+          <p className="text-sm text-red-500">{form.formState.errors.amount.message}</p>
+        )}
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="category">Categoria</Label>
-        <Select onValueChange={(value) => form.setValue("category", value)}>
+        <Select 
+          onValueChange={(value) => form.setValue("category", value)}
+          disabled={isSubmitting}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Selecione uma categoria" />
           </SelectTrigger>
@@ -125,6 +147,7 @@ export function ExpenseForm() {
                 "w-full justify-start text-left font-normal",
                 !form.getValues("date") && "text-muted-foreground",
               )}
+              disabled={isSubmitting}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
               {form.getValues("date") ? (
@@ -141,10 +164,13 @@ export function ExpenseForm() {
               onSelect={(date) => date && form.setValue("date", date)}
               initialFocus
               locale={ptBR}
+              disabled={isSubmitting}
             />
           </PopoverContent>
         </Popover>
-        {form.formState.errors.date && <p className="text-sm text-red-500">{form.formState.errors.date.message}</p>}
+        {form.formState.errors.date && (
+          <p className="text-sm text-red-500">{form.formState.errors.date.message}</p>
+        )}
       </div>
 
       <Button type="submit" className="w-full" disabled={isSubmitting}>

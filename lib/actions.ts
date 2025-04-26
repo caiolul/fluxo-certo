@@ -13,12 +13,20 @@ export type Expense = {
 
 export async function addExpense(data: Omit<Expense, "id">) {
   try {
+    // Validar os dados antes de inserir
+    if (!data.description || !data.category || !data.date || data.amount <= 0) {
+      throw new Error("Dados inválidos")
+    }
+
+    // Garantir que a data seja um objeto Date
+    const date = data.date instanceof Date ? data.date : new Date(data.date)
+
     const expense = await prisma.expense.create({
       data: {
         description: data.description,
-        amount: data.amount,
+        amount: Number(data.amount),
         category: data.category,
-        date: data.date,
+        date: date,
       },
     })
 
@@ -26,7 +34,10 @@ export async function addExpense(data: Omit<Expense, "id">) {
     return expense
   } catch (error) {
     console.error("Error adding expense:", error)
-    throw new Error("Failed to add expense")
+    if (error instanceof Error) {
+      throw new Error(`Erro ao adicionar gasto: ${error.message}`)
+    }
+    throw new Error("Erro ao adicionar gasto")
   }
 }
 
