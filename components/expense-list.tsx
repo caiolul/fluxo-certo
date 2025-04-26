@@ -20,47 +20,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/components/ui/use-toast"
-import { deleteExpense } from "@/lib/actions"
+import { deleteExpense, getExpenses } from "@/lib/actions"
 import { useRouter } from "next/navigation"
-
-// Simulação de dados - em um app real, estes viriam do banco de dados
-const mockExpenses = [
-  {
-    id: "1",
-    description: "Supermercado",
-    amount: 250.75,
-    category: "alimentacao",
-    date: new Date(2023, 3, 15),
-  },
-  {
-    id: "2",
-    description: "Conta de luz",
-    amount: 120.5,
-    category: "moradia",
-    date: new Date(2023, 3, 10),
-  },
-  {
-    id: "3",
-    description: "Uber",
-    amount: 35.2,
-    category: "transporte",
-    date: new Date(2023, 3, 8),
-  },
-  {
-    id: "4",
-    description: "Farmácia",
-    amount: 89.9,
-    category: "saude",
-    date: new Date(2023, 3, 5),
-  },
-  {
-    id: "5",
-    description: "Cinema",
-    amount: 60.0,
-    category: "lazer",
-    date: new Date(2023, 3, 2),
-  },
-]
+import { useEffect } from "react"
 
 const categories = [
   { id: "alimentacao", name: "Alimentação" },
@@ -79,13 +41,31 @@ export function ExpenseList() {
   const [categoryFilter, setCategoryFilter] = useState("")
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [expenseToDelete, setExpenseToDelete] = useState<string | null>(null)
+  const [expenses, setExpenses] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Em um app real, usaríamos um hook para buscar os dados do servidor
-  const expenses = mockExpenses
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      try {
+        const data = await getExpenses()
+        setExpenses(data)
+      } catch (error) {
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar os gastos. Tente novamente.",
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchExpenses()
+  }, [toast])
 
   const filteredExpenses = expenses.filter((expense) => {
     const matchesSearch = expense.description.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = categoryFilter === "" || expense.category === categoryFilter
+    const matchesCategory = categoryFilter === "all" || expense.category === categoryFilter
     return matchesSearch && matchesCategory
   })
 
@@ -98,6 +78,7 @@ export function ExpenseList() {
     if (expenseToDelete) {
       try {
         await deleteExpense(expenseToDelete)
+        setExpenses(expenses.filter(expense => expense.id !== expenseToDelete))
         toast({
           title: "Gasto excluído",
           description: "O gasto foi excluído com sucesso!",
@@ -116,6 +97,10 @@ export function ExpenseList() {
 
   const getCategoryName = (categoryId: string) => {
     return categories.find((cat) => cat.id === categoryId)?.name || categoryId
+  }
+
+  if (isLoading) {
+    return <div className="text-center py-4">Carregando...</div>
   }
 
   return (
@@ -162,7 +147,7 @@ export function ExpenseList() {
                 <TableRow key={expense.id}>
                   <TableCell className="font-medium">{expense.description}</TableCell>
                   <TableCell>{getCategoryName(expense.category)}</TableCell>
-                  <TableCell>{format(expense.date, "dd/MM/yyyy", { locale: ptBR })}</TableCell>
+                  <TableCell>{format(new Date(expense.date), "dd/MM/yyyy", { locale: ptBR })}</TableCell>
                   <TableCell className="text-right">{expense.amount.toFixed(2)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">

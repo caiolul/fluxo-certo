@@ -1,8 +1,8 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { prisma } from "./db"
 
-// Tipos para os dados
 export type Expense = {
   id: string
   description: string
@@ -11,57 +11,61 @@ export type Expense = {
   date: Date
 }
 
-// Em um app real, estas funções interagiriam com um banco de dados
 export async function addExpense(data: Omit<Expense, "id">) {
-  // Simulação de adição ao banco de dados
-  console.log("Adicionando gasto:", data)
+  try {
+    const expense = await prisma.expense.create({
+      data: {
+        description: data.description,
+        amount: data.amount,
+        category: data.category,
+        date: data.date,
+      },
+    })
 
-  // Em um app real, aqui você usaria Prisma, Drizzle ou outro ORM
-  // const expense = await db.expense.create({ data })
-
-  // Revalidar o cache para atualizar os dados na UI
-  revalidatePath("/")
-
-  return { id: Math.random().toString(36).substring(7) }
+    revalidatePath("/")
+    return expense
+  } catch (error) {
+    console.error("Error adding expense:", error)
+    throw new Error("Failed to add expense")
+  }
 }
 
 export async function deleteExpense(id: string) {
-  // Simulação de remoção do banco de dados
-  console.log("Excluindo gasto:", id)
+  try {
+    await prisma.expense.delete({
+      where: { id },
+    })
 
-  // Em um app real, aqui você usaria Prisma, Drizzle ou outro ORM
-  // await db.expense.delete({ where: { id } })
-
-  // Revalidar o cache para atualizar os dados na UI
-  revalidatePath("/")
-
-  return { success: true }
+    revalidatePath("/")
+    return { success: true }
+  } catch (error) {
+    console.error("Error deleting expense:", error)
+    throw new Error("Failed to delete expense")
+  }
 }
 
 export async function updateExpense(id: string, data: Partial<Omit<Expense, "id">>) {
-  // Simulação de atualização no banco de dados
-  console.log("Atualizando gasto:", id, data)
+  try {
+    await prisma.expense.update({
+      where: { id },
+      data,
+    })
 
-  // Em um app real, aqui você usaria Prisma, Drizzle ou outro ORM
-  // await db.expense.update({ where: { id }, data })
-
-  // Revalidar o cache para atualizar os dados na UI
-  revalidatePath("/")
-
-  return { success: true }
+    revalidatePath("/")
+    return { success: true }
+  } catch (error) {
+    console.error("Error updating expense:", error)
+    throw new Error("Failed to update expense")
+  }
 }
 
 export async function getExpenses() {
-  // Simulação de busca no banco de dados
-  // Em um app real, aqui você usaria Prisma, Drizzle ou outro ORM
-  // return await db.expense.findMany({ orderBy: { date: 'desc' } })
-
-  // Retornando dados simulados
-  return [
-    { id: "1", description: "Supermercado", amount: 250.75, category: "alimentacao", date: new Date(2023, 3, 15) },
-    { id: "2", description: "Conta de luz", amount: 120.5, category: "moradia", date: new Date(2023, 3, 10) },
-    { id: "3", description: "Uber", amount: 35.2, category: "transporte", date: new Date(2023, 3, 8) },
-    { id: "4", description: "Farmácia", amount: 89.9, category: "saude", date: new Date(2023, 3, 5) },
-    { id: "5", description: "Cinema", amount: 60.0, category: "lazer", date: new Date(2023, 3, 2) },
-  ]
+  try {
+    return await prisma.expense.findMany({
+      orderBy: { date: 'desc' },
+    })
+  } catch (error) {
+    console.error("Error fetching expenses:", error)
+    throw new Error("Failed to fetch expenses")
+  }
 }
