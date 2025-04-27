@@ -52,6 +52,8 @@ export function ExpenseForm() {
     },
   })
 
+  const date = form.watch("date")
+
   async function onSubmit(data: ExpenseFormValues) {
     setIsSubmitting(true)
     try {
@@ -145,13 +147,13 @@ export function ExpenseForm() {
               variant="outline"
               className={cn(
                 "w-full justify-start text-left font-normal",
-                !form.getValues("date") && "text-muted-foreground",
+                !date && "text-muted-foreground",
               )}
               disabled={isSubmitting}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {form.getValues("date") ? (
-                format(form.getValues("date"), "PPP", { locale: ptBR })
+              {date ? (
+                format(date, "PPP", { locale: ptBR })
               ) : (
                 <span>Selecione uma data</span>
               )}
@@ -160,7 +162,7 @@ export function ExpenseForm() {
           <PopoverContent className="w-auto p-0">
             <Calendar
               mode="single"
-              selected={form.getValues("date")}
+              selected={date}
               onSelect={(date) => date && form.setValue("date", date)}
               initialFocus
               locale={ptBR}

@@ -1,24 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ChartTooltip } from "@/components/ui/chart"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts"
 import { ArrowDownIcon, ArrowUpIcon, DollarSign } from "lucide-react"
-
-// Simulação de dados - em um app real, estes viriam do banco de dados
-const mockExpenses = [
-  { id: "1", description: "Supermercado", amount: 250.75, category: "alimentacao", date: new Date(2023, 3, 15) },
-  { id: "2", description: "Conta de luz", amount: 120.5, category: "moradia", date: new Date(2023, 3, 10) },
-  { id: "3", description: "Uber", amount: 35.2, category: "transporte", date: new Date(2023, 3, 8) },
-  { id: "4", description: "Farmácia", amount: 89.9, category: "saude", date: new Date(2023, 3, 5) },
-  { id: "5", description: "Cinema", amount: 60.0, category: "lazer", date: new Date(2023, 3, 2) },
-  { id: "6", description: "Restaurante", amount: 120.0, category: "alimentacao", date: new Date(2023, 3, 20) },
-  { id: "7", description: "Conta de água", amount: 80.3, category: "moradia", date: new Date(2023, 3, 12) },
-  { id: "8", description: "Livros", amount: 150.0, category: "educacao", date: new Date(2023, 3, 18) },
-]
+import { getExpenses } from "@/lib/actions"
 
 const categories = [
   { id: "alimentacao", name: "Alimentação", color: "#FF6384" },
@@ -39,9 +28,27 @@ const periods = [
 
 export function ExpenseSummary() {
   const [period, setPeriod] = useState("30dias")
+  const [expenses, setExpenses] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Em um app real, filtraríamos os dados com base no período selecionado
-  const expenses = mockExpenses
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      try {
+        const data = await getExpenses()
+        setExpenses(data || [])
+      } catch (error) {
+        console.error("Erro ao buscar gastos:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchExpenses()
+  }, [])
+
+  if (isLoading) {
+    return <div className="text-center py-4">Carregando...</div>
+  }
 
   // Calcular total de gastos
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0)

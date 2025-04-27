@@ -1,6 +1,6 @@
 FROM node:22.14.0-alpine
 
-# RUN apk add --no-cache openssl1.1-compat
+RUN apk add --no-cache curl openssl
 
 WORKDIR /app
 
@@ -21,4 +21,4 @@ ENV HOSTNAME="0.0.0.0"
 
 RUN npx prisma generate
 
-CMD ["npm", "start"]
+CMD npx prisma migrate deploy && npm start

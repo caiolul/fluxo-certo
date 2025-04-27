@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { Edit2, Trash2 } from "lucide-react"
+import { Edit2, Trash2, CalendarIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,10 +19,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 import { useToast } from "@/components/ui/use-toast"
-import { deleteExpense, getExpenses } from "@/lib/actions"
+import { deleteExpense, getExpenses, updateExpense } from "@/lib/actions"
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
 
 const categories = [
   { id: "alimentacao", name: "Alimentação" },
@@ -43,6 +53,14 @@ export function ExpenseList() {
   const [expenseToDelete, setExpenseToDelete] = useState<string | null>(null)
   const [expenses, setExpenses] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [expenseToEdit, setExpenseToEdit] = useState<any>(null)
+  const [editForm, setEditForm] = useState({
+    description: "",
+    amount: "",
+    category: "",
+    date: new Date(),
+  })
 
   useEffect(() => {
     const fetchExpenses = async () => {
@@ -75,6 +93,17 @@ export function ExpenseList() {
     setDeleteDialogOpen(true)
   }
 
+  const handleEditClick = (expense: any) => {
+    setExpenseToEdit(expense)
+    setEditForm({
+      description: expense.description,
+      amount: expense.amount.toString(),
+      category: expense.category,
+      date: new Date(expense.date),
+    })
+    setEditDialogOpen(true)
+  }
+
   const confirmDelete = async () => {
     if (expenseToDelete) {
       try {
@@ -94,6 +123,40 @@ export function ExpenseList() {
       }
     }
     setDeleteDialogOpen(false)
+  }
+
+  const handleEditSubmit = async () => {
+    if (expenseToEdit) {
+      try {
+        await updateExpense(expenseToEdit.id, {
+          description: editForm.description,
+          amount: Number(editForm.amount),
+          category: editForm.category,
+          date: editForm.date,
+        })
+
+        // Atualizar a lista de gastos
+        const updatedExpenses = expenses.map(expense => 
+          expense.id === expenseToEdit.id 
+            ? { ...expense, ...editForm, amount: Number(editForm.amount) }
+            : expense
+        )
+        setExpenses(updatedExpenses)
+
+        toast({
+          title: "Gasto atualizado",
+          description: "O gasto foi atualizado com sucesso!",
+        })
+        router.refresh()
+        setEditDialogOpen(false)
+      } catch (error) {
+        toast({
+          title: "Erro",
+          description: "Ocorreu um erro ao atualizar o gasto. Tente novamente.",
+          variant: "destructive",
+        })
+      }
+    }
   }
 
   const getCategoryName = (categoryId: string) => {
@@ -162,7 +225,11 @@ export function ExpenseList() {
                   <TableCell className="text-right">{expense.amount.toFixed(2)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="icon">
+                      <Button 
+                        variant="outline" 
+                        size="icon"
+                        onClick={() => handleEditClick(expense)}
+                      >
                         <Edit2 className="h-4 w-4" />
                       </Button>
                       <Button
@@ -204,6 +271,91 @@ export function ExpenseList() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Gasto</DialogTitle>
+            <DialogDescription>
+              Faça as alterações necessárias e clique em salvar.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="description">Descrição</label>
+              <Input
+                id="description"
+                value={editForm.description}
+                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="amount">Valor (R$)</label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                value={editForm.amount}
+                onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="category">Categoria</label>
+              <Select
+                value={editForm.category}
+                onValueChange={(value) => setEditForm({ ...editForm, category: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="date">Data</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !editForm.date && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {editForm.date ? (
+                      format(editForm.date, "PPP", { locale: ptBR })
+                    ) : (
+                      <span>Selecione uma data</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={editForm.date}
+                    onSelect={(date) => date && setEditForm({ ...editForm, date })}
+                    initialFocus
+                    locale={ptBR}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleEditSubmit}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
