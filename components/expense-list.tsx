@@ -94,6 +94,7 @@ export function ExpenseList() {
   }
 
   const handleEditClick = (expense: any) => {
+    // console.log('Editando despesa:', expense);
     setExpenseToEdit(expense)
     setEditForm({
       description: expense.description,
@@ -101,6 +102,7 @@ export function ExpenseList() {
       category: expense.category,
       date: new Date(expense.date),
     })
+    console.log('Data formatada:', new Date(expense.date));
     setEditDialogOpen(true)
   }
 
@@ -272,7 +274,7 @@ export function ExpenseList() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen} modal={false}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar Gasto</DialogTitle>
@@ -327,6 +329,7 @@ export function ExpenseList() {
                       "w-full justify-start text-left font-normal",
                       !editForm.date && "text-muted-foreground"
                     )}
+                    onClick={() => (editForm.date)}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {editForm.date ? (
@@ -336,13 +339,20 @@ export function ExpenseList() {
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent className="w-auto p-0 z-[9999]" align="start">
                   <Calendar
                     mode="single"
                     selected={editForm.date}
-                    onSelect={(date) => date && setEditForm({ ...editForm, date })}
+                    onSelect={(date) => {
+                      // console.log('Data selecionada:', date);
+                      if (date) {
+                        setEditForm({ ...editForm, date })
+                        // console.log('Nova data no form:', date);
+                      }
+                    }}
                     initialFocus
                     locale={ptBR}
+                    disabled={(date) => date > new Date()}
                   />
                 </PopoverContent>
               </Popover>
