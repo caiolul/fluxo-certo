@@ -94,7 +94,6 @@ export function ExpenseList() {
   }
 
   const handleEditClick = (expense: any) => {
-    // console.log('Editando despesa:', expense);
     setExpenseToEdit(expense)
     setEditForm({
       description: expense.description,
@@ -102,7 +101,6 @@ export function ExpenseList() {
       category: expense.category,
       date: new Date(expense.date),
     })
-    console.log('Data formatada:', new Date(expense.date));
     setEditDialogOpen(true)
   }
 
@@ -137,7 +135,6 @@ export function ExpenseList() {
           date: editForm.date,
         })
 
-        // Atualizar a lista de gastos
         const updatedExpenses = expenses.map(expense => 
           expense.id === expenseToEdit.id 
             ? { ...expense, ...editForm, amount: Number(editForm.amount) }
@@ -344,10 +341,8 @@ export function ExpenseList() {
                     mode="single"
                     selected={editForm.date}
                     onSelect={(date) => {
-                      // console.log('Data selecionada:', date);
                       if (date) {
                         setEditForm({ ...editForm, date })
-                        // console.log('Nova data no form:', date);
                       }
                     }}
                     initialFocus

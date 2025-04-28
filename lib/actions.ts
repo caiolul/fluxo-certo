@@ -13,12 +13,10 @@ export type Expense = {
 
 export async function addExpense(data: Omit<Expense, "id">) {
   try {
-    // Validar os dados antes de inserir
     if (!data.description || !data.category || !data.date || data.amount <= 0) {
       throw new Error("Dados inválidos")
     }
 
-    // Garantir que a data seja um objeto Date
     const date = data.date instanceof Date ? data.date : new Date(data.date)
 
     const expense = await prisma.expense.create({

@@ -50,10 +50,8 @@ export function ExpenseSummary() {
     return <div className="text-center py-4">Carregando...</div>
   }
 
-  // Calcular total de gastos
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0)
 
-  // Dados para o gráfico de pizza por categoria
   const pieChartData = categories
     .map((category) => {
       const categoryExpenses = expenses.filter((expense) => expense.category === category.id)
@@ -66,7 +64,6 @@ export function ExpenseSummary() {
     })
     .filter((item) => item.value > 0)
 
-  // Dados para o gráfico de barras por categoria
   const barChartData = categories
     .map((category) => {
       const categoryExpenses = expenses.filter((expense) => expense.category === category.id)
@@ -79,7 +76,6 @@ export function ExpenseSummary() {
     .filter((item) => item.total > 0)
     .sort((a, b) => b.total - a.total)
 
-  // Encontrar a categoria com maior gasto
   const topCategory = barChartData.length > 0 ? barChartData[0] : { name: "Nenhum", total: 0 }
 
   return (
